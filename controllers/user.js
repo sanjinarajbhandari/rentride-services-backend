@@ -2,11 +2,9 @@ require("dotenv").config();
 const bcryptjs = require("bcryptjs");
 const { validationResult } = require("express-validator");
 const User = require("../models/user");
-const sendPasswordResetMail = require("../utlis/mail");
 const {
   getToken,
   getRefreshToken,
-  getPasswordResetToken,
 } = require("../utlis/authenticate");
 const jwt = require("jsonwebtoken");
 
@@ -137,52 +135,7 @@ exports.token = async (req, res, next) => {
     res.json({ accessToken: accessToken });
   });
 };
-//triggered when forgot password button is clicked
-exports.passwordReset = async (req, res, next) => {
-  const email = req.body.email;
-  console.log(email, "data");
 
-  const user = await User.findOne({ email: email });
-  console.log(email, user, "data");
-
-  if (!user) return res.sendStatus(401);
-  const passwordResetToken = getPasswordResetToken({ _id: user._id });
-  console.log(passwordResetToken, "resettoken");
-
-  sendPasswordResetMail(passwordResetToken, email);
-  res.status(200).json({ message: "Message sent" });
-};
-
-//actual code to reset
-exports.resetpassword = async (req, res, next) => {
-  console.log(req.body, "bods");
-  const token = req.body.token;
-  const email = "mowyqolu@mailinator.com";
-  const hashedPassword = bcryptjs.hashSync(req.body.newPassword, 12);
-
-  jwt.verify(token, process.env.PASSWORD_RESET_TOKEN_SECRET, async (err) => {
-    if (err) {
-      return res.status(401).json({ message: "Token verification failed" });
-    }
-
-    try {
-      const user = await User.findOne({ email: email });
-      if (!user) {
-        return res.status(401).json({ message: "User not found" });
-      }
-
-      console.log("done");
-      user.password = hashedPassword;
-      await user.save();
-
-      // Respond with success status and message after password reset completes
-      return res.status(200).json({ message: "Password reset successful" });
-    } catch (error) {
-      console.error("Error resetting password:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-};
 
 //change when you know old password
 exports.changePassword = async (req, res, next) => {
