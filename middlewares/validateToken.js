@@ -10,7 +10,6 @@ module.exports = (roles) => {
     if (accessTokenCookie) {
       decodedToken = jwt.verify(accessTokenCookie, process.env.JWT_SECRET);
     }
-    console.log(decodedToken, accessTokenCookie, "error");
     if (roles.includes(decodedToken.role)) {
       next();
     } else {
